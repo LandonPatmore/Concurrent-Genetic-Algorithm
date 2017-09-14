@@ -1,36 +1,46 @@
 public class Student {
 
     private final String id;
-    private final int height;
-    private int xPoint;
-    private int yPoint;
+    private final double loveDL;
+    private int row;
+    private int col;
 
-    public Student(String id, int height, int x, int y){
+    public Student(String id, double loveDL, int row, int col) {
         this.id = id;
-        this.xPoint = x;
-        this.yPoint = y;
-        this.height = height;
+        this.row = row;
+        this.col = col;
+        this.loveDL = loveDL;
 
     }
 
-    public synchronized void move(int newX, int newY){
-        this.xPoint = newX;
-        this.yPoint = newY;
+    public synchronized void move(int row, int col) {
+        this.row = row;
+        this.col = col;
     }
 
-    public synchronized String getId(){
+    public synchronized String getId() {
         return id;
     }
 
-    public synchronized int getX(){
-        return xPoint;
+    public synchronized int getRow() {
+        return row;
     }
 
-    public synchronized int getY(){
-        return yPoint;
+    public synchronized int getCol() {
+        return col;
     }
 
-    public synchronized int getHeight(){
-        return height;
+    public synchronized double getHeight() {
+        return loveDL;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id='" + id + '\'' +
+                ", loveDL=" + loveDL +
+                ", row=" + row +
+                ", col=" + col +
+                '}';
     }
 }
