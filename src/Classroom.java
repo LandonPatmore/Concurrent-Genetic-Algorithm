@@ -1,48 +1,41 @@
-import java.util.Random;
+import java.util.ArrayList;
 
 public class Classroom {
-    private final Student[][] seats;
-    private final int rows;
-    private final int cols;
+    private Student[][] students;
+    private int rowsLength;
+    private int colsLength;
 
-    public Classroom(int rows, int cols){
-        this.seats = new Student[rows][cols];
-        this.rows = rows;
-        this.cols = cols;
-        this.insertStudent();
+
+    public Classroom(int rowLength, int colLength){
+        students = new Student[rowLength][colLength];
+        this.rowsLength = rowLength;
+        this.colsLength = colLength;
     }
 
-    public synchronized void viewClassroom(){
-        for(int i = 0; i < rows; i++){
-            for (int j = 0; j < cols; j++) {
-                if(seats[i][j] == null){
-                    System.out.println("Seat empty");
-                } else {
-                    System.out.println(seats[i][j].toString());
+    public void addStudent(Student s){
+
+        for(int i = 0; i < rowsLength; i++){
+            for(int j = 0; j < colsLength; j++){
+                if(students[i][j] == null){
+                    s.setPos(i,j);
+                    students[i][j] = s;
+                    return;
                 }
             }
         }
     }
 
-    public synchronized void insertStudent(){
-        int counter = 0;
-        for(int i = 0; i < rows; i++){
-            for (int j = 0; j < cols; j++) {
-                seats[i][j] = new Student(Integer.toString(counter), studentProgress(), i, j);
-                counter++;
-            }
+    public ArrayList<Student> getStudentNeighbors(int studentLocationRow, int studentLocationCol){
+        ArrayList<Student> neighbors = new ArrayList<>();
+        int rowIndexes[] = {-1, -1, -1, 0, 0, 1, 1, 1};
+        int colIndexes[] = {-1, 0, 1, -1, 1, -1, 0, 1};
+
+        for(int i = 0; i < rowIndexes.length; i++){
+            try {
+                neighbors.add(students[studentLocationRow + rowIndexes[i]][studentLocationCol + colIndexes[i]]);
+                System.out.println("Neighbor added");
+            } catch (ArrayIndexOutOfBoundsException e){}
         }
-    }
-
-    private synchronized double studentProgress(){
-        double testScore = 0.0;
-
-        for(int i = 0; i < 3; i++){
-            double test = new Random().nextDouble() * 50;
-            double correctTestScore = test + 50;
-            testScore += correctTestScore;
-        }
-
-        return testScore / 3;
+        return neighbors;
     }
 }

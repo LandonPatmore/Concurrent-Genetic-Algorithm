@@ -1,46 +1,42 @@
+import java.awt.*;
+
 public class Student {
 
-    private final String id;
-    private final double loveDL;
-    private int row;
-    private int col;
+    private Color color;
+    private int fitness;
+    private int x;
+    private int y;
 
-    public Student(String id, double loveDL, int row, int col) {
-        this.id = id;
-        this.row = row;
-        this.col = col;
-        this.loveDL = loveDL;
-
+    public Student(){
+        fitness = 0;
     }
 
-    public synchronized void move(int row, int col) {
-        this.row = row;
-        this.col = col;
+    public Student(Color color){
+        this.color = color;
     }
 
-    public synchronized String getId() {
-        return id;
+    public void setPos(int x, int y){
+        this.x = x;
+        this.y = y;
     }
 
-    public synchronized int getRow() {
-        return row;
+    public int getX() {
+        return x;
     }
 
-    public synchronized int getCol() {
-        return col;
+    public int getY() {
+        return y;
     }
 
-    public synchronized double getHeight() {
-        return loveDL;
+    public int getColor() {
+        return color.getRGB();
     }
 
-    @Override
-    public String toString() {
-        return "Student{" +
-                "id='" + id + '\'' +
-                ", loveDL=" + loveDL +
-                ", row=" + row +
-                ", col=" + col +
-                '}';
+    public int getfitness() {
+        return fitness;
+    }
+
+    public void setfitness(int fitness) {
+        this.fitness = fitness;
     }
 }
