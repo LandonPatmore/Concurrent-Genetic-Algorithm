@@ -1,3 +1,5 @@
+package csc375hw1;
+
 import java.util.ArrayList;
 
 public class Classroom {
@@ -10,6 +12,10 @@ public class Classroom {
         students = new Student[rowLength][colLength];
         this.rowsLength = rowLength;
         this.colsLength = colLength;
+    }
+
+    public Student[][] getStudents() {
+        return students;
     }
 
     public void addStudent(Student s){
@@ -25,16 +31,15 @@ public class Classroom {
         }
     }
 
-    public ArrayList<Student> getStudentNeighbors(int studentLocationRow, int studentLocationCol){
+    public ArrayList<Student> getStudentNeighbors(Student s){
         ArrayList<Student> neighbors = new ArrayList<>();
         int rowIndexes[] = {-1, -1, -1, 0, 0, 1, 1, 1};
         int colIndexes[] = {-1, 0, 1, -1, 1, -1, 0, 1};
 
         for(int i = 0; i < rowIndexes.length; i++){
             try {
-                neighbors.add(students[studentLocationRow + rowIndexes[i]][studentLocationCol + colIndexes[i]]);
-                System.out.println("Neighbor added");
-            } catch (ArrayIndexOutOfBoundsException e){}
+                neighbors.add(students[s.getX() + rowIndexes[i]][s.getY() + colIndexes[i]]);
+            } catch (ArrayIndexOutOfBoundsException ignored){}
         }
         return neighbors;
     }
