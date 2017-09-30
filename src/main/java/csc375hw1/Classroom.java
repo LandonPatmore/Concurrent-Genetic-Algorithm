@@ -1,6 +1,8 @@
 package csc375hw1;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 public class Classroom {
@@ -9,7 +11,7 @@ public class Classroom {
     private int cols;
     private float totalFitness;
     private int studentPopulation;
-    private int number;
+    private int classNumber;
 
     private ArrayList<Student> listOfStudents;
     private ArrayList<int[]> swaps;
@@ -19,56 +21,140 @@ public class Classroom {
         students = new Student[rowLength][colLength];
         this.rows = rowLength;
         this.cols = colLength;
-        totalFitness = 0.0f;
         random = new Random();
         listOfStudents = new ArrayList<>();
-        swaps = new ArrayList<>();
         studentPopulation = rowLength * colLength;
-        number = 0;
+        swaps = new ArrayList<>();
 
         generateStudents();
-        assignTotalFitness();
     }
 
-    public int[] pickRandomStudents(){
-        int[] swap = new int[4];
-        int amount = 0;
+    public Classroom(Classroom c){
+        this.rows = c.rows;
+        this.cols = c.cols;
+        listOfStudents = new ArrayList<>();
+        this.students = copyStudents(c.students);
+        this.studentPopulation = c.studentPopulation;
+        random = new Random();
+        swaps = new ArrayList<>();
+    }
 
-        for(int k = 0; k < 2; k++) {
-            int x = random.nextInt(rows);
-            int y = random.nextInt(cols);
+    public synchronized void updateCrossedOverSwaps(List<int []> newSwaps){
+        swaps.subList(0, newSwaps.size()).clear();
+        swaps.addAll(0, newSwaps);
+    }
 
-            swap[amount++] = x;
-            swap[amount++] = y;
+    public void setClassNumber(int classNumber) {
+        this.classNumber = classNumber;
+    }
 
+    public int getClassNumber() {
+        return classNumber;
+    }
+
+    public Student[][] copyStudents(Student[][] s) {
+        Student[][] newStudents = new Student[rows][cols];
+
+        for(int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++){
+                Student student = new Student(s[i][j]);
+                newStudents[i][j] = student;
+                listOfStudents.add(student);
+            }
         }
-        return swap;
+        return newStudents;
     }
 
-    public ArrayList<int[]> swaps() {
+    public synchronized int[] pickRandomStudents(){
+        int[] studentsPos = new int[4];
+
+        do {
+            int amount = 0;
+
+            for (int k = 0; k < 2; k++) {
+                float fitnessSoFar = 0.0f;
+                float slice = random.nextFloat() * totalFitness;
+
+                for (Student s : listOfStudents) {
+                    fitnessSoFar += s.getFitness();
+
+                    if (fitnessSoFar >= slice) {
+                        studentsPos[amount++] = s.getX();
+                        studentsPos[amount++] = s.getY();
+                        break;
+                    }
+                }
+            }
+        } while (studentsPos[0] == studentsPos[2] && studentsPos[1] == studentsPos[3]);
+
+        return studentsPos;
+    }
+
+    public synchronized void orderStudents(){
+        Collections.sort(listOfStudents);
+    }
+
+    public synchronized void generateSwaps() {
+//        swaps.clear();
+//        orderStudents();
+        ArrayList<int[]> newSwaps = new ArrayList<>();
 
         for(int i = 0; i < studentPopulation; i++){
-            swaps.add(pickRandomStudents());
+            newSwaps.add(pickRandomStudents());
         }
 
-        return swaps;
+        swaps.addAll(newSwaps);
+
     }
 
-    public void setSwaps(ArrayList<int[]> swaps) {
+    public synchronized void swapStudents(){
+        for(int[] s : swaps){
+            Student tempStudent = students[s[0]][s[1]];
+
+            students[s[0]][s[1]] = students[s[2]][s[3]];
+            students[s[2]][s[3]] = tempStudent;
+        }
+
+        setStudentPos();
+    }
+
+    public void setListOfStudents(){
+        listOfStudents.clear();
+
+        for(int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++){
+                    listOfStudents.add(students[i][j]);
+            }
+        }
+    }
+
+    public synchronized void setStudentPos(){
+        for(int i = 0; i < rows; i++){
+            for(int j = 0; j < cols; j++){
+                students[i][j].setPos(i,j);
+            }
+        }
+
+        setListOfStudents();
+    }
+
+    public synchronized void setSwaps(ArrayList<int[]> swaps) {
         this.swaps = swaps;
     }
 
-    public ArrayList<int[]> getSwaps() {
+    public synchronized ArrayList<int[]> getSwaps() {
         return swaps;
     }
 
-    public void assignTotalFitness(){
+    public synchronized void calculateTotalFitness(){
+        totalFitness = 0.0f;
+
         for(Student s : listOfStudents){
             totalFitness += assignLocalFitness(s);
         }
     }
 
-    private float assignLocalFitness(Student s){
+    private synchronized float assignLocalFitness(Student s){
         ArrayList<Student> neighbors = getStudentNeighbors(s);
         float fitness = 0.0f;
 
@@ -81,6 +167,8 @@ public class Classroom {
     }
 
     public void generateStudents(){
+        int number = 0;
+
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
                 if(students[i][j] == null){
@@ -93,7 +181,7 @@ public class Classroom {
         }
     }
 
-    private ArrayList<Student> getStudentNeighbors(Student s){
+    private synchronized ArrayList<Student> getStudentNeighbors(Student s){
         ArrayList<Student> neighbors = new ArrayList<>();
         int rowIndexes[] = {-1, -1, -1, 0, 0, 1, 1, 1};
         int colIndexes[] = {-1, 0, 1, -1, 1, -1, 0, 1};
@@ -106,16 +194,20 @@ public class Classroom {
         return neighbors;
     }
 
-    public void showClassroom(){
+    public synchronized void showClassroom(){
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
-                System.out.printf("%-30s", "Color: " + students[i][j].getColor() + " Fit: " + students[i][j].getFitness());
+                System.out.printf("%-10s", students[i][j].getFitness());
             }
             System.out.println();
         }
     }
 
-    public float getTotalFitness() {
+    public synchronized void setTotalFitness(float totalFitness) {
+        this.totalFitness = totalFitness;
+    }
+
+    public synchronized float getTotalFitness() {
         return totalFitness;
     }
 }

@@ -16,6 +16,18 @@ public class Student implements Comparable<Student> {
         localFitness = 0;
     }
 
+    public Student(Student s){
+        this.color = s.color;
+        this.number = s.number;
+        this.x = s.x;
+        this.y = s.y;
+        this.localFitness = s.localFitness;
+    }
+
+    public String getNumber() {
+        return Integer.toString(number);
+    }
+
     public int getColor() {
         return color;
     }
@@ -34,6 +46,11 @@ public class Student implements Comparable<Student> {
 
     public int getY() {
         return y;
+    }
+
+    public void setPos(int x, int y){
+        this.x = x;
+        this.y = y;
     }
 
     @Override

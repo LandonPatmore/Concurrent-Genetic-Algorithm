@@ -3,21 +3,22 @@ package csc375hw1;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class GeneticAlgorithm {
+public class GeneticAlgorithm extends Thread{
     private float totalFitness;
     private ArrayList<Classroom> classrooms;
     private Random random;
     private int classroomPopulation;
 
-    public GeneticAlgorithm(int rows, int cols) {
+    public GeneticAlgorithm(int rows, int cols){
         totalFitness = 0.0f;
         classrooms = new ArrayList<>();
         random = new Random();
         classroomPopulation = rows * cols;
     }
 
-    public Classroom roulette(){
+    public synchronized Classroom roulette(){
         float fitnessSoFar = 0.0f;
+
         float slice = random.nextFloat() * totalFitness;
 
         for(Classroom c : classrooms){
@@ -27,11 +28,10 @@ public class GeneticAlgorithm {
                 return c;
             }
         }
-
         return null;
     }
 
-    public void crossover(Classroom c1, Classroom c2){
+    public synchronized void crossover(Classroom c1, Classroom c2){
         final float crossover_rate = 0.7f;
 
         if(random.nextDouble() < crossover_rate){
@@ -58,6 +58,5 @@ public class GeneticAlgorithm {
             }
         }
     }
-
 
 }
