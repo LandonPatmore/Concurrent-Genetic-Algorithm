@@ -7,7 +7,7 @@ import java.util.concurrent.Exchanger;
 
 public class Tester implements Runnable{
 
-    private Classroom c;
+    private final Classroom c;
     Exchanger<List<int[]>> exchanger;
     Random random = new Random();
 
@@ -35,13 +35,18 @@ public class Tester implements Runnable{
     public void run() {
 
         try {
-            c.calculateTotalFitness();
-            c.generateSwaps();
-            c.updateCrossedOverSwaps(exchanger.exchange(crossover(c)));
-            mutate(c);
-            c.swapStudents();
-            c.calculateTotalFitness();
-            System.out.println("Fitness for classroom " + c.getClassNumber() + ": " + c.getTotalFitness());
+            synchronized (c) {
+                while (true) {
+                    c.calculateTotalFitness();
+                    c.generateSwaps();
+                    c.updateCrossedOverSwaps(exchanger.exchange(crossover(c)));
+                    c.setSelected(false);
+                    mutate(c);
+                    c.swapStudents();
+                    c.calculateTotalFitness();
+                    System.out.println("Fitness for classroom " + c.getClassNumber() + ": " + c.getTotalFitness());
+                }
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

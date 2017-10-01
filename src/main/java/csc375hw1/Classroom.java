@@ -12,6 +12,7 @@ public class Classroom {
     private float totalFitness;
     private int studentPopulation;
     private int classNumber;
+    private boolean selected;
 
     private ArrayList<Student> listOfStudents;
     private ArrayList<int[]> swaps;
@@ -25,11 +26,14 @@ public class Classroom {
         listOfStudents = new ArrayList<>();
         studentPopulation = rowLength * colLength;
         swaps = new ArrayList<>();
+        selected = false;
 
         generateStudents();
     }
 
-    public Classroom(Classroom c){
+    public Classroom(Classroom c, int num){
+        this.classNumber = num;
+        this.selected = c.selected;
         this.rows = c.rows;
         this.cols = c.cols;
         listOfStudents = new ArrayList<>();
@@ -95,8 +99,8 @@ public class Classroom {
     }
 
     public synchronized void generateSwaps() {
-//        swaps.clear();
-//        orderStudents();
+        swaps.clear();
+        orderStudents();
         ArrayList<int[]> newSwaps = new ArrayList<>();
 
         for(int i = 0; i < studentPopulation; i++){
@@ -104,6 +108,15 @@ public class Classroom {
         }
 
         swaps.addAll(newSwaps);
+
+        try {
+            System.out.println("Classroom: " + classNumber + " waiting...");
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Classroom: " + classNumber + " will be crossed");
 
     }
 
@@ -209,5 +222,14 @@ public class Classroom {
 
     public synchronized float getTotalFitness() {
         return totalFitness;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public synchronized void setSelected(boolean selected) {
+        this.selected = selected;
+        notify();
     }
 }

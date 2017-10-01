@@ -1,10 +1,8 @@
 package csc375hw1;
 
 import java.util.List;
-import java.util.concurrent.Exchanger;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Random;
+import java.util.concurrent.*;
 
 public class MainRunner {
 
@@ -13,28 +11,28 @@ public class MainRunner {
         master.calculateTotalFitness();
         System.out.println("Original Fitness: " + master.getTotalFitness());
         Classroom[] classrooms = new Classroom[10];
-        Exchanger<List<int[]>> exchanger = new Exchanger<>();
-
         ExecutorService e = Executors.newCachedThreadPool();
+        Exchanger<List<int[]>> exchanger = new Exchanger<>();
+        for(int i = 0; i < classrooms.length; i++){
+            classrooms[i] = new Classroom(master, i);
+            e.execute(new Tester(classrooms[i], exchanger));
+        }
 
-//        for(int i = 0; i < classrooms.length; i++){
-//            Classroom c = new Classroom(master);
-//            c.setClassNumber(i);
-//            classrooms[i] = c;
-//        }
+        for(;;){
+            int random = new Random().nextInt(classrooms.length);
 
-        new Thread(new Tester(new Classroom(master), exchanger)).start();
-        new Thread(new Tester(new Classroom(master), exchanger)).start();
-        new Thread(new Tester(new Classroom(master), exchanger)).start();
-        new Thread(new Tester(new Classroom(master), exchanger)).start();
-
-//        for (Classroom classroom : classrooms) {
-//            new Thread(new Tester(classroom, exchanger)).start();
-//        }
+            e.execute(() -> classrooms[random].setSelected(true));
+        }
 //
-//        for (Classroom classroom : classrooms) {
-//            new Thread(new Tester(classroom, exchanger)).start();
-//        }
+//        e.execute(() -> classrooms[0].setSelected(true));
+//        e.execute(() -> classrooms[1].setSelected(true));
+//
+//        e.execute(new Tester(c1, exchanger));
+//        e.execute(() -> c1.setSelected(true));
+//        e.execute(new Tester(c2, exchanger));
+//        e.execute(() -> c2.setSelected(true));
+
+
 
     }
 
