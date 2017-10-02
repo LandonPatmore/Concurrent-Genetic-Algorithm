@@ -60,7 +60,6 @@ public class MainRunner extends Application {
                             text.setBoundsType(TextBoundsType.VISUAL);
                             StackPane stack = new StackPane();
                             stack.getChildren().addAll(r, text);
-
                             GridPane.setRowIndex(stack, i);
                             GridPane.setColumnIndex(stack, j);
                             grid.getChildren().addAll(stack);

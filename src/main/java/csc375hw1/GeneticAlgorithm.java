@@ -1,6 +1,7 @@
 package csc375hw1;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Exchanger;
@@ -53,7 +54,18 @@ public class GeneticAlgorithm implements Runnable{
      * Picks classrooms to be notified to then swap their swaps between each other
      */
     public synchronized void roulette(){
-//        Collections.sort(classrooms);
+        totalFitness = 0.0f;
+
+        for(int i = 0; i < totalClassrooms; i++){
+            classrooms.get(i).calculateTotalFitness();
+            totalFitness += classrooms.get(i).getTotalFitness();
+        }
+
+        try {
+            Collections.sort(classrooms);
+        } catch (IllegalArgumentException ignored){
+            System.out.println("Error caught.");
+        }
 
         float slice = random.nextFloat() * totalFitness;
         float fitnessSoFar = 0.0f;
@@ -91,14 +103,14 @@ public class GeneticAlgorithm implements Runnable{
 
     @Override
     public void run() {
-        ExecutorService e = Executors.newFixedThreadPool(totalClassrooms);
+        ExecutorService e = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         try {
             Thread.sleep(5000);
         } catch (InterruptedException e1) {
             e1.printStackTrace();
         }
         for (;;) {
-            crossoverPoint = random.nextInt(totalClassrooms);
+            crossoverPoint = random.nextInt(totalClassrooms * 10);
             for (Classroom c : classrooms) {
                 e.execute(() -> {
                     c.calculateTotalFitness();

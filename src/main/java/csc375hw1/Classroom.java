@@ -170,7 +170,7 @@ public class Classroom implements Comparable<Classroom>{
             orderStudents();
             ArrayList<int[]> newSwaps = new ArrayList<>();
 
-            for (int i = 0; i < studentPopulation; i++) {
+            for (int i = 0; i < studentPopulation * 10; i++) {
                 newSwaps.add(pickRandomStudents());
             }
 
