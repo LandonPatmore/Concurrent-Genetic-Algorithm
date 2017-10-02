@@ -1,23 +1,30 @@
 package csc375hw1;
 
+import javafx.scene.paint.Color;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class Classroom {
+public class Classroom implements Comparable<Classroom>{
     private Student[][] students;
     private int rows;
     private int cols;
     private float totalFitness;
     private int studentPopulation;
     private int classNumber;
-    private boolean selected;
 
     private ArrayList<Student> listOfStudents;
     private ArrayList<int[]> swaps;
     private Random random;
+    private boolean selected;
 
+    /**
+     *
+     * @param rowLength the amount of rows
+     * @param colLength the amount of cols
+     */
     public Classroom(int rowLength, int colLength){
         students = new Student[rowLength][colLength];
         this.rows = rowLength;
@@ -26,14 +33,42 @@ public class Classroom {
         listOfStudents = new ArrayList<>();
         studentPopulation = rowLength * colLength;
         swaps = new ArrayList<>();
-        selected = false;
+        this.selected = false;
 
         generateStudents();
     }
 
+    /**
+     *
+     * @return students array
+     */
+    public Student[][] getStudents() {
+        return students;
+    }
+
+    /**
+     *
+     * @return amount of rows
+     */
+    public int getRows() {
+        return rows;
+    }
+
+    /**
+     *
+     * @return amount of cols
+     */
+    public int getCols() {
+        return cols;
+    }
+
+    /**
+     * Copy Constructor
+     * @param c classroom to copy
+     * @param num classroom number
+     */
     public Classroom(Classroom c, int num){
         this.classNumber = num;
-        this.selected = c.selected;
         this.rows = c.rows;
         this.cols = c.cols;
         listOfStudents = new ArrayList<>();
@@ -41,21 +76,42 @@ public class Classroom {
         this.studentPopulation = c.studentPopulation;
         random = new Random();
         swaps = new ArrayList<>();
+        this.selected = c.selected;
     }
 
+    /**
+     *
+     * @param crossoverPoint the point at which to split the arraylist into a sublist
+     * @return the new sublist of the arraylist
+     */
+    public synchronized ArrayList<int[]> crossover(int crossoverPoint){
+        return new ArrayList<>(swaps.subList(0, crossoverPoint));
+    }
+
+    /**
+     *
+     * @param newSwaps list of swaps from another classroom
+     */
     public synchronized void updateCrossedOverSwaps(List<int []> newSwaps){
-        swaps.subList(0, newSwaps.size()).clear();
-        swaps.addAll(0, newSwaps);
+        if(newSwaps.size() != 0) {
+            swaps.subList(0, newSwaps.size()).clear();
+            swaps.addAll(0, newSwaps);
+        }
     }
 
-    public void setClassNumber(int classNumber) {
-        this.classNumber = classNumber;
-    }
-
+    /**
+     *
+     * @return the class number
+     */
     public int getClassNumber() {
         return classNumber;
     }
 
+    /**
+     *
+     * @param s students array in a classroom to be copied into a new classroom
+     * @return the new students array to be copied into a new classroom
+     */
     public Student[][] copyStudents(Student[][] s) {
         Student[][] newStudents = new Student[rows][cols];
 
@@ -69,6 +125,10 @@ public class Classroom {
         return newStudents;
     }
 
+    /**
+     *
+     * @return int[] array that hols 4 numbers which, when split, corresponds to a student's position
+     */
     public synchronized int[] pickRandomStudents(){
         int[] studentsPos = new int[4];
 
@@ -94,32 +154,40 @@ public class Classroom {
         return studentsPos;
     }
 
+    /**
+     * Orders the students inside the list of students
+     */
     public synchronized void orderStudents(){
         Collections.sort(listOfStudents);
     }
 
-    public synchronized void generateSwaps() {
-        swaps.clear();
-        orderStudents();
-        ArrayList<int[]> newSwaps = new ArrayList<>();
+    /**
+     * Generates a list of swaps using a roulette method select students
+     */
+    public void generateSwaps() {
+        synchronized (this) {
+            swaps.clear();
+            orderStudents();
+            ArrayList<int[]> newSwaps = new ArrayList<>();
 
-        for(int i = 0; i < studentPopulation; i++){
-            newSwaps.add(pickRandomStudents());
+            for (int i = 0; i < studentPopulation; i++) {
+                newSwaps.add(pickRandomStudents());
+            }
+
+            swaps.addAll(newSwaps);
+
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-
-        swaps.addAll(newSwaps);
-
-        try {
-            System.out.println("Classroom: " + classNumber + " waiting...");
-            wait();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        System.out.println("Classroom: " + classNumber + " will be crossed");
 
     }
 
+    /**
+     * Swaps students within the swaps list with each other
+     */
     public synchronized void swapStudents(){
         for(int[] s : swaps){
             Student tempStudent = students[s[0]][s[1]];
@@ -131,16 +199,36 @@ public class Classroom {
         setStudentPos();
     }
 
+    /**
+     * Mutates random index inside the swaps list if the random number is below the mutation rate
+     */
+    public synchronized void mutate(){
+        final float mutation_rate = 0.1f;
+
+        for(int i = 0; i < swaps.size(); i++){
+            if(random.nextDouble() < mutation_rate){
+                swaps.set(i, pickRandomStudents());
+                return;
+            }
+        }
+    }
+
+    /**
+     * Sets the list of students after they have been swapped so that the other methods are updated with the new students' positions and fitnesses
+     */
     public void setListOfStudents(){
         listOfStudents.clear();
 
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
-                    listOfStudents.add(students[i][j]);
+                listOfStudents.add(students[i][j]);
             }
         }
     }
 
+    /**
+     * Sets the student's position corresponding to it's position within the students array
+     */
     public synchronized void setStudentPos(){
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
@@ -151,14 +239,9 @@ public class Classroom {
         setListOfStudents();
     }
 
-    public synchronized void setSwaps(ArrayList<int[]> swaps) {
-        this.swaps = swaps;
-    }
-
-    public synchronized ArrayList<int[]> getSwaps() {
-        return swaps;
-    }
-
+    /**
+     * Calculates the total fitness of the classroom
+     */
     public synchronized void calculateTotalFitness(){
         totalFitness = 0.0f;
 
@@ -167,33 +250,46 @@ public class Classroom {
         }
     }
 
+    /**
+     *
+     * @param s student you want to find the fitness of
+     * @return the local fitness of the student
+     */
     private synchronized float assignLocalFitness(Student s){
         ArrayList<Student> neighbors = getStudentNeighbors(s);
         float fitness = 0.0f;
 
         for(Student n : neighbors){
-            fitness += Math.abs(s.getColor() - n.getColor());
+            fitness += Math.abs(s.getColor().getRed() - n.getColor().getRed());
         }
+
         s.setFitness(fitness);
 
         return fitness;
     }
 
+    /**
+     * Generates random students to be inserted into the classroom
+     */
     public void generateStudents(){
-        int number = 0;
 
         for(int i = 0; i < rows; i++){
             for(int j = 0; j < cols; j++){
                 if(students[i][j] == null){
-                    Student s = new Student(random.nextInt(100), number, i, j);
+                    Color c = Color.rgb(random.nextInt(256), 0, 0);
+                    Student s = new Student(c, i, j);
                     students[i][j] = s;
                     listOfStudents.add(s);
-                    number++;
                 }
             }
         }
     }
 
+    /**
+     *
+     * @param s student to be assessed
+     * @return list of neighboring students around the student
+     */
     private synchronized ArrayList<Student> getStudentNeighbors(Student s){
         ArrayList<Student> neighbors = new ArrayList<>();
         int rowIndexes[] = {-1, -1, -1, 0, 0, 1, 1, 1};
@@ -207,29 +303,26 @@ public class Classroom {
         return neighbors;
     }
 
-    public synchronized void showClassroom(){
-        for(int i = 0; i < rows; i++){
-            for(int j = 0; j < cols; j++){
-                System.out.printf("%-10s", students[i][j].getFitness());
-            }
-            System.out.println();
-        }
-    }
-
-    public synchronized void setTotalFitness(float totalFitness) {
-        this.totalFitness = totalFitness;
-    }
-
+    /**
+     *
+     * @return the total fitness of the classroom
+     */
     public synchronized float getTotalFitness() {
         return totalFitness;
     }
 
-    public boolean isSelected() {
-        return selected;
+    /**
+     *
+     * @param selected whether the classroom has been selected to be swapped with another classroom
+     */
+    public synchronized void notify(boolean selected) {
+        if (selected) {
+            notify();
+        }
     }
 
-    public synchronized void setSelected(boolean selected) {
-        this.selected = selected;
-        notify();
+    @Override
+    public int compareTo(Classroom o) {
+        return Float.compare(this.totalFitness, o.totalFitness);
     }
 }
